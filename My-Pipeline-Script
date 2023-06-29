@@ -1,0 +1,23 @@
+node{
+  def mavenHome = tool name: 'maven 3.9.2'
+  stage('1Clone'){
+    git 'development', url: 'https://github.com/uniqland/maven-web-application-1.git'
+  }
+  stage('2Test+build'){
+    sh "${mavenHome}/bin/mvn clean package"
+  }
+    stage('3CodeQuality'){
+    sh "${mavenHome}/bin/mvn sonar:sonar"
+  }
+   stage('4Uploadartifacts'){
+    sh "${mavenHome}/bin/mvn deploy"
+  }
+    stage('5Deploy'){
+  deploy adapters: [tomcat9(credentialsId: 'tomcat-login', path: '', url: 'http://44.202.7.152:8090/')], contextPath: null, war: 'target/*war'
+  }
+   stage('6Notification'){
+    emailext body: '''Hi Team,
+Build status
+Landmark Technologies''', recipientProviders: [developers(), contributor()], subject: 'build status', to: 'developers'
+  }
+    }
